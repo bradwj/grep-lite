@@ -1,9 +1,21 @@
+use clap::{App, Arg};
 use regex::Regex;
 
 fn main() {
+    let args = App::new("grep-lite")
+        .version("0.1")
+        .about("searches for patterns")
+        .arg(
+            Arg::with_name("pattern")
+                .help("the pattern to search for")
+                .takes_value(true)
+                .required(true),
+        )
+        .get_matches();
+
+    let pattern = args.value_of("pattern").unwrap();
     let ctx_lines = 2;
-    let search_term = "book";
-    let re = Regex::new(search_term).unwrap();
+    let re = Regex::new(pattern).unwrap();
 
     let quote = "\
 Every face, every shop, 
