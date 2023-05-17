@@ -1,5 +1,8 @@
 use clap::{App, Arg};
 use regex::Regex;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
 
 fn main() {
     let args = App::new("grep-lite")
@@ -11,27 +14,28 @@ fn main() {
                 .takes_value(true)
                 .required(true),
         )
+        .arg(
+            Arg::with_name("input")
+                .help("the file to search")
+                .takes_value(true)
+                .required(true),
+        )
         .get_matches();
 
     let pattern = args.value_of("pattern").unwrap();
-    let ctx_lines = 2;
     let re = Regex::new(pattern).unwrap();
+    let ctx_lines = 2;
 
-    let quote = "\
-Every face, every shop, 
-bedroom window, public-house, and
-dark square is a picture 
-feverishly turned--in search of what? 
-It is the same with books. 
-What do we seek 
-through millions of pages?";
+    let input = args.value_of("input").unwrap();
+    let f = File::open(input).unwrap();
+    let reader = BufReader::new(f);
 
     let mut tags: Vec<usize> = vec![];
     let mut ctx: Vec<Vec<(usize, String)>> = vec![];
 
-    for (i, line) in quote.lines().enumerate() {
-        let contains_substr = re.find(line);
-        match contains_substr {
+    for (i, line_) in reader.lines().enumerate() {
+        let line = line_.unwrap();
+        match re.find(&line) {
             Some(_) => {
                 tags.push(i);
 
@@ -46,13 +50,20 @@ through millions of pages?";
         return;
     }
 
-    for (i, line) in quote.lines().enumerate() {
+    // reinicializa o reader
+    let f = File::open(input).unwrap();
+    let reader = BufReader::new(f);
+
+    let mut line: String;
+
+    for (i, line_) in reader.lines().enumerate() {
+        line = line_.unwrap();
         for (j, tag) in tags.iter().enumerate() {
             let lower_bound = tag.saturating_sub(ctx_lines);
             let upper_bound = tag + ctx_lines;
 
             if (i >= lower_bound) && (i <= upper_bound) {
-                let line_as_string = String::from(line);
+                let line_as_string = String::from(&line);
                 let local_ctx = (i, line_as_string);
                 ctx[j].push(local_ctx);
             }
