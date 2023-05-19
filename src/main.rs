@@ -24,16 +24,16 @@ fn main() {
 
     let pattern = args.value_of("pattern").unwrap();
     let re = Regex::new(pattern).unwrap();
-    let ctx_lines = 2;
+    let ctx_lines = 2; // TODO: take in an arg for this
 
     let input = args.value_of("input").unwrap();
     let f = File::open(input).unwrap();
-    let reader = BufReader::new(f);
+    let mut reader = BufReader::new(f);
 
     let mut tags: Vec<usize> = vec![];
     let mut ctx: Vec<Vec<(usize, String)>> = vec![];
 
-    for (i, line_) in reader.lines().enumerate() {
+    for (i, line_) in reader.by_ref().lines().enumerate() {
         let line = line_.unwrap();
         match re.find(&line) {
             Some(_) => {
@@ -50,12 +50,9 @@ fn main() {
         return;
     }
 
-    // reinicializa o reader
-    let f = File::open(input).unwrap();
-    let reader = BufReader::new(f);
+    reader.seek(std::io::SeekFrom::Start(0)).unwrap();
 
     let mut line: String;
-
     for (i, line_) in reader.lines().enumerate() {
         line = line_.unwrap();
         for (j, tag) in tags.iter().enumerate() {
