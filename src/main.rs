@@ -66,11 +66,18 @@ fn main() {
                 .takes_value(true)
                 .required(false),
         )
+        .args_from_usage(
+            "-C --context=[NUM] 'Prints searched line and n lines before and after the result.'",
+        )
         .get_matches();
 
     let pattern = args.value_of("pattern").unwrap();
     let re = Regex::new(pattern).unwrap();
-    let ctx_lines = 2; // TODO: take in an arg for this
+
+    let ctx_lines: usize = args
+        .value_of("context")
+        .and_then(|x| x.parse().ok())
+        .unwrap_or(0);
 
     let input = args.value_of("input").unwrap_or("-");
 
